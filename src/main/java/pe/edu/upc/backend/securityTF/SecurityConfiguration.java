@@ -21,16 +21,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfiguration {
 
 
-    private static final String[] AUTH_WHITELIST ={
-
-            "/v3/api-docs/**",
-            "/swagger-ui.html",
-            "/swagger-ui/**",
-
-            // -- Login y Registro
-            "/api/auth/login", // Tu nueva ruta de login
-            "/api/auth/register" // Ruta de registro, si la tuvieras
-    };
+    // No se necesita AUTH_WHITELIST, se maneja directamente en las reglas
 
     @Autowired
     JwtRequestFilter jwtRequestFilter; // Filtro que procesa el JWT
@@ -57,21 +48,29 @@ public class SecurityConfiguration {
         http.cors(Customizer.withDefaults());
         http.csrf(AbstractHttpConfigurer::disable);
 
-        // 3. Reglas de Autorización
-        http.authorizeHttpRequests(
-                (auth) -> auth
-                        .requestMatchers(AUTH_WHITELIST).permitAll()
-
-                        // Rutas protegidas
-                        .requestMatchers("/api/admin/**").hasAuthority("ROLE_ADMIN")
-                        .requestMatchers(HttpMethod.GET, "/api/psicologos/**").hasAnyAuthority("ROLE_PSICOLOGO", "ROLE_ADMIN")
-                        .requestMatchers("/api/psicologos/**").hasAuthority("ROLE_PSICOLOGO")
-                        .requestMatchers("/api/padres/**").hasAuthority("ROLE_PADRE")
-
-                        // Final: Cualquier otra ruta debe estar autenticada
-                        .anyRequest().authenticated()
+        // 3. Reglas de Autorización - CONFIGURACIÓN REFORZADA PARA DELETE Y PATCH
+        http.authorizeHttpRequests(auth -> auth
+            // 0. REGLAS EXPLÍCITAS PARA MÉTODOS ESPECÍFICOS (Cinturón y Tirantes)
+            .requestMatchers(HttpMethod.DELETE, "/api/admin/**").hasRole("ADMIN")
+            .requestMatchers(HttpMethod.PATCH, "/api/admin/**").hasRole("ADMIN")
+            
+            // 1. Públicos
+            .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html", "/api/auth/**", "/api/public/**").permitAll()
+            
+            // 2. Roles Maestros (Acceso total a sus áreas)
+            .requestMatchers("/api/admin/**").hasRole("ADMIN")
+            .requestMatchers("/api/padres/**").hasAnyRole("PADRE", "ADMIN")
+            .requestMatchers("/api/psicologos/**").hasAnyRole("PSICOLOGO", "ADMIN")
+            
+            // 3. Endpoints Específicos (sin usar ** en el medio)
+            .requestMatchers("/api/asignaciones/**").authenticated()
+            .requestMatchers("/api/recursos/**").authenticated()
+            
+            // 4. Resto
+            .anyRequest().authenticated()
         );
 
+        // 4. Configuración de sesión (Stateless para JWT)
         http.sessionManagement(
                 (session) -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
         );

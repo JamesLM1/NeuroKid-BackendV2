@@ -4,7 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.Date;
+import java.time.LocalDate;
 
 @Data
 @AllArgsConstructor
@@ -15,7 +15,7 @@ public class PADREEvaluacionPsicologoDTO {
     private Long psicologoId;  // ID del psicólogo evaluado
     private Integer puntaje;      // 1 a 5
     private String comentario;
-    private Date fechaEvaluacion;
+    private LocalDate fechaEvaluacion;
 }
 
 //(Para Creación)

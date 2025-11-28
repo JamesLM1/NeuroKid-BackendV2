@@ -9,10 +9,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
-import java.sql.Time;
-import java.time.LocalTime;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import java.time.LocalDate;
-import java.util.Date;
+import java.time.LocalTime;
 
 
 @Data
@@ -25,9 +24,14 @@ public class Cita {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long citaId;
 
-    private Date fecha;
-    private Time horaInicio;
-    private Time horaFin;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+    private LocalDate fecha;
+    
+    @JsonFormat(pattern = "HH:mm")
+    private LocalTime horaInicio;
+    
+    @JsonFormat(pattern = "HH:mm")
+    private LocalTime horaFin;
     private String motivo;
     private String hallazgos;
     private String tareas;

@@ -9,6 +9,9 @@ public interface PADREProgresoPadreService {
     // C - Crear Evaluación
     PADREEvaluacionPsicologoDTO evaluarPsicologo(Long padreId, PADREEvaluacionPsicologoDTO evaluacionDTO);
 
+    // C - Crear Evaluación por Cita
+    PADREEvaluacionPsicologoDTO evaluarPsicologoPorCita(Long padreId, Long citaId, PADREEvaluacionPsicologoDTO evaluacionDTO);
+
     // R - Leer Informes
     List<PADREInformeDTO> obtenerInformesPorMenor(Long menorId, Long padreId);
 }

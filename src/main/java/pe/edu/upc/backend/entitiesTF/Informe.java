@@ -22,9 +22,15 @@ public class Informe {
 
     private Integer Mes;
     private Integer Ano;
+    
+    @Column(columnDefinition = "TEXT")
     private String Resumen;
+    
     private String titulo;
+    
+    @Column(columnDefinition = "TEXT")
     private String contenido;
+    
     private Date fechaCreacion;
     private Integer calificacionEficacia;
 

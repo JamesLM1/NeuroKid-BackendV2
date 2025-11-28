@@ -43,6 +43,10 @@ public class PSICOLOGOProgresoPsicologicoServiceImpl implements PSICOLOGOProgres
         dto.setContenido(entity.getContenido());
         dto.setFechaCreacion(entity.getFechaCreacion());
         dto.setCalificacionEficacia(entity.getCalificacionEficacia());
+        
+        // Enriquecer con nombre del menor desde la Asignación
+        dto.setNombreMenor(entity.getAsignacion().getMenor().getNombre() + " " + entity.getAsignacion().getMenor().getApellido());
+        
         return dto;
     }
 
@@ -102,6 +106,15 @@ public class PSICOLOGOProgresoPsicologicoServiceImpl implements PSICOLOGOProgres
         informe.setContenido(PSICOLOGOInformeDTO.getContenido());
         informe.setCalificacionEficacia(PSICOLOGOInformeDTO.getCalificacionEficacia());
         informe.setFechaCreacion(new Date()); // Establecer la fecha de creación
+        
+        // CORREGIDO: Asegurar que el Resumen nunca esté vacío
+        // Si el DTO no tiene resumen, usar el título como resumen
+        String resumen = PSICOLOGOInformeDTO.getTitulo() != null && !PSICOLOGOInformeDTO.getTitulo().isEmpty() 
+            ? PSICOLOGOInformeDTO.getTitulo() 
+            : (PSICOLOGOInformeDTO.getContenido() != null && !PSICOLOGOInformeDTO.getContenido().isEmpty()
+                ? PSICOLOGOInformeDTO.getContenido().substring(0, Math.min(100, PSICOLOGOInformeDTO.getContenido().length()))
+                : "Sin resumen");
+        informe.setResumen(resumen);
 
         Informe nuevoInforme = informeRepository.save(informe);
         return convertToDTO(nuevoInforme);

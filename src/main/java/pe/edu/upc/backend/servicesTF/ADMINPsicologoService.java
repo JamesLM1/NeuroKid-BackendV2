@@ -18,4 +18,7 @@ public interface ADMINPsicologoService {
 
     // D - Delete
     void eliminarPsicologo(Long id);
+    
+    // Toggle estado del usuario
+    ADMINPsicologoDTO toggleEstadoPsicologo(Long id);
 }

@@ -10,7 +10,7 @@ import pe.edu.upc.backend.entitiesTF.Informe;
 import pe.edu.upc.backend.repositoriesTF.*;
 import pe.edu.upc.backend.servicesTF.PADREProgresoPadreService;
 
-import java.util.Date;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -32,12 +32,15 @@ public class PADREProgresoPadreServiceImpl implements PADREProgresoPadreService 
     @Autowired
     private PsicologoRepository psicologoRepository;
 
+    @Autowired
+    private CitaRepository citaRepository;
+
     // --- Conversión de DTO a Entity para Evaluación (C) ---
     private EvaluacionPsicologo convertToEntity(PADREEvaluacionPsicologoDTO dto) {
         EvaluacionPsicologo entity = new EvaluacionPsicologo();
         entity.setPuntaje(dto.getPuntaje());
         entity.setComentario(dto.getComentario());
-        entity.setFechaEvaluacion(new Date());
+        entity.setFechaEvaluacion(LocalDate.now());
         // Las FKs (Padre y Psicologo) se asignan en la función evaluarPsicologo
         return entity;
     }
@@ -61,10 +64,20 @@ public class PADREProgresoPadreServiceImpl implements PADREProgresoPadreService 
         dto.setMes(entity.getMes());
         dto.setAnio(entity.getAno());
         dto.setResumen(entity.getResumen());
+        dto.setTitulo(entity.getTitulo()); // Agregar título para búsqueda inteligente
 
         // Mapeo de información del menor desde la Asignación
         dto.setMenorId(entity.getAsignacion().getMenor().getMenorId());
-        dto.setNombreMenor(entity.getAsignacion().getMenor().getNombre());
+        dto.setNombreMenor(entity.getAsignacion().getMenor().getNombre() + " " + entity.getAsignacion().getMenor().getApellido());
+        
+        // Enriquecer con información del psicólogo
+        dto.setNombrePsicologo(entity.getAsignacion().getPsicologo().getNombre() + " " + entity.getAsignacion().getPsicologo().getApellido());
+        
+        // Enriquecer con fecha de creación (convertir Date a LocalDate si es necesario, o usar Date directamente)
+        if (entity.getFechaCreacion() != null) {
+            dto.setFechaCreacion(entity.getFechaCreacion());
+        }
+        
         return dto;
     }
 
@@ -87,14 +100,38 @@ public class PADREProgresoPadreServiceImpl implements PADREProgresoPadreService 
     }
 
     @Override
+    public PADREEvaluacionPsicologoDTO evaluarPsicologoPorCita(Long padreId, Long citaId, PADREEvaluacionPsicologoDTO evaluacionDTO) {
+        // 1. Buscar la cita
+        var cita = citaRepository.findById(citaId)
+                .orElseThrow(() -> new EntityNotFoundException("Cita no encontrada con ID: " + citaId));
+
+        // 2. Validar que la cita pertenece a un menor de este padre
+        if (!cita.getAsignacion().getMenor().getPadre().getPadreId().equals(padreId)) {
+            throw new SecurityException("Acceso denegado: La cita no pertenece a un menor de este padre.");
+        }
+
+        // 3. Validar que la cita está finalizada
+        if (!"Finalizada".equals(cita.getEstado())) {
+            throw new IllegalStateException("Solo se pueden evaluar citas finalizadas.");
+        }
+
+        // 4. Obtener el psicólogo de la asignación de la cita
+        Long psicologoId = cita.getAsignacion().getPsicologo().getPsicologoId();
+        evaluacionDTO.setPsicologoId(psicologoId);
+
+        // 5. Delegar al método existente
+        return evaluarPsicologo(padreId, evaluacionDTO);
+    }
+
+    @Override
     public List<PADREInformeDTO> obtenerInformesPorMenor(Long menorId, Long padreId) {
         // **Validación de seguridad:** Se mantiene la validación que asegura que el menor pertenezca al padre
         menorRepository.findById(menorId)
                 .filter(m -> m.getPadre().getPadreId().equals(padreId))
                 .orElseThrow(() -> new SecurityException("Acceso denegado: Menor no encontrado o no pertenece a este padre."));
 
-        // Se usa la función convertToDTO completada
-        return informeRepository.findPorAsignacionIdJPQL(menorId).stream()
+        // CORREGIDO: Usar el método correcto que busca por menorId, no por asignacionId
+        return informeRepository.findPorMenorIdJPQL(menorId).stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }

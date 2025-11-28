@@ -5,13 +5,21 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import pe.edu.upc.backend.dtosTF.ADMINAsignacionDTO;
+import pe.edu.upc.backend.dtosTF.ADMINCitaListDTO;
+import pe.edu.upc.backend.dtosTF.ADMINEvaluacionListDTO;
 import pe.edu.upc.backend.dtosTF.ADMINPadreDTO;
 import pe.edu.upc.backend.dtosTF.ADMINPsicologoDTO;
 import pe.edu.upc.backend.dtosTF.ADMINRecursoEducativoDTO;
+import pe.edu.upc.backend.dtosTF.DashboardMetricsDTO;
+import pe.edu.upc.backend.dtosTF.PADREMenorDTO;
 import pe.edu.upc.backend.servicesTF.ADMINAsignacionService;
+import pe.edu.upc.backend.servicesTF.ADMINCitaService;
+import pe.edu.upc.backend.servicesTF.ADMINEvaluacionService;
+import pe.edu.upc.backend.servicesTF.ADMINMetricsService;
 import pe.edu.upc.backend.servicesTF.ADMINPadreService;
 import pe.edu.upc.backend.servicesTF.ADMINPsicologoService;
 import pe.edu.upc.backend.servicesTF.ADMINRecursoEducativoService;
+import pe.edu.upc.backend.servicesTF.PADREMenorService;
 
 import java.util.List;
 
@@ -31,6 +39,18 @@ public class AdminController {
 
     @Autowired
     private ADMINRecursoEducativoService ADMINRecursoEducativoService;
+
+    @Autowired
+    private PADREMenorService PADREMenorService;
+
+    @Autowired
+    private ADMINCitaService ADMINCitaService;
+
+    @Autowired
+    private ADMINMetricsService ADMINMetricsService;
+
+    @Autowired
+    private ADMINEvaluacionService ADMINEvaluacionService;
 
     // ===========================================
     // 1. GESTIÓN DE ASIGNACIONES (Ruta: /api/admin/asignaciones)
@@ -119,11 +139,37 @@ public class AdminController {
         return new ResponseEntity<>(padreActualizado, HttpStatus.OK);
     }
 
-    // DELETE: Eliminar Padre por ID (D)
+    // PATCH: Toggle estado del Padre (Activar/Desactivar)
+    @PatchMapping("/padres/{id}/toggle")
+    public ResponseEntity<ADMINPadreDTO> toggleEstadoPadre(@PathVariable Long id) {
+        ADMINPadreDTO padreActualizado = ADMINPadreService.toggleEstadoPadre(id);
+        return new ResponseEntity<>(padreActualizado, HttpStatus.OK);
+    }
+
+    // PATCH: Desactivar Padre por ID (Soft Delete) - Compatibilidad
+    @PatchMapping("/padres/{id}/desactivar")
+    public ResponseEntity<ADMINPadreDTO> desactivarPadre(@PathVariable Long id) {
+        ADMINPadreDTO padreActualizado = ADMINPadreService.toggleEstadoPadre(id);
+        return new ResponseEntity<>(padreActualizado, HttpStatus.OK);
+    }
+
+    // DELETE: Mantener compatibilidad con frontend existente (Toggle)
     @DeleteMapping("/padres/{id}")
-    public ResponseEntity<Void> eliminarPadre(@PathVariable Long id) {
-        ADMINPadreService.eliminarPadre(id);
-        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    public ResponseEntity<ADMINPadreDTO> eliminarPadre(@PathVariable Long id) {
+        ADMINPadreDTO padreActualizado = ADMINPadreService.toggleEstadoPadre(id);
+        return new ResponseEntity<>(padreActualizado, HttpStatus.OK);
+    }
+
+    // GET: Obtener menores de un padre específico (para Admin)
+    @GetMapping("/padres/{padreId}/menores")
+    public ResponseEntity<List<PADREMenorDTO>> obtenerMenoresPorPadre(@PathVariable Long padreId) {
+        try {
+            List<PADREMenorDTO> menores = PADREMenorService.obtenerMenoresPorPadre(padreId);
+            return new ResponseEntity<>(menores, HttpStatus.OK);
+        } catch (Exception e) {
+            System.err.println("❌ Error al obtener menores del padre " + padreId + ": " + e.getMessage());
+            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
     // ===========================================
@@ -164,11 +210,25 @@ public class AdminController {
         return new ResponseEntity<>(psicologoActualizado, HttpStatus.OK);
     }
 
-    // DELETE: Eliminar Psicólogo por ID (D)
+    // PATCH: Toggle estado del Psicólogo (Activar/Desactivar)
+    @PatchMapping("/psicologos/{id}/toggle")
+    public ResponseEntity<ADMINPsicologoDTO> toggleEstadoPsicologo(@PathVariable Long id) {
+        ADMINPsicologoDTO psicologoActualizado = ADMINPsicologoService.toggleEstadoPsicologo(id);
+        return new ResponseEntity<>(psicologoActualizado, HttpStatus.OK);
+    }
+
+    // PATCH: Desactivar Psicólogo por ID (Soft Delete) - Compatibilidad
+    @PatchMapping("/psicologos/{id}/desactivar")
+    public ResponseEntity<ADMINPsicologoDTO> desactivarPsicologo(@PathVariable Long id) {
+        ADMINPsicologoDTO psicologoActualizado = ADMINPsicologoService.toggleEstadoPsicologo(id);
+        return new ResponseEntity<>(psicologoActualizado, HttpStatus.OK);
+    }
+
+    // DELETE: Mantener compatibilidad con frontend existente (Toggle)
     @DeleteMapping("/psicologos/{id}")
-    public ResponseEntity<Void> eliminarPsicologo(@PathVariable Long id) {
-        ADMINPsicologoService.eliminarPsicologo(id);
-        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    public ResponseEntity<ADMINPsicologoDTO> eliminarPsicologo(@PathVariable Long id) {
+        ADMINPsicologoDTO psicologoActualizado = ADMINPsicologoService.toggleEstadoPsicologo(id);
+        return new ResponseEntity<>(psicologoActualizado, HttpStatus.OK);
     }
 
     // ===========================================
@@ -219,6 +279,46 @@ public class AdminController {
     public ResponseEntity<Void> eliminarRecurso(@PathVariable Long id) {
         ADMINRecursoEducativoService.eliminarRecurso(id);
         // Uso explícito de HttpStatus.NO_CONTENT (204)
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
+
+    // ===========================================
+    // 5. MONITOREO DE CITAS (Ruta: /api/admin/citas)
+    // ===========================================
+
+    // GET: Obtener todas las Citas ordenadas por fecha descendente (R)
+    @GetMapping("/citas")
+    public ResponseEntity<List<ADMINCitaListDTO>> obtenerTodasLasCitas() {
+        List<ADMINCitaListDTO> citas = ADMINCitaService.obtenerTodasLasCitas();
+        return new ResponseEntity<>(citas, HttpStatus.OK);
+    }
+
+    // ===========================================
+    // 6. MÉTRICAS DEL DASHBOARD (Ruta: /api/admin/metrics)
+    // ===========================================
+
+    // GET: Obtener métricas del dashboard (R)
+    @GetMapping("/metrics")
+    public ResponseEntity<DashboardMetricsDTO> obtenerMetricasDashboard() {
+        DashboardMetricsDTO metrics = ADMINMetricsService.obtenerMetricasDashboard();
+        return new ResponseEntity<>(metrics, HttpStatus.OK);
+    }
+
+    // ===========================================
+    // 7. GESTIÓN DE EVALUACIONES (Ruta: /api/admin/evaluaciones)
+    // ===========================================
+
+    // GET: Obtener todas las Evaluaciones ordenadas por fecha descendente (R)
+    @GetMapping("/evaluaciones")
+    public ResponseEntity<List<ADMINEvaluacionListDTO>> obtenerTodasLasEvaluaciones() {
+        List<ADMINEvaluacionListDTO> evaluaciones = ADMINEvaluacionService.obtenerTodasLasEvaluaciones();
+        return new ResponseEntity<>(evaluaciones, HttpStatus.OK);
+    }
+
+    // DELETE: Eliminar Evaluación por ID (D - Moderación)
+    @DeleteMapping("/evaluaciones/{id}")
+    public ResponseEntity<Void> eliminarEvaluacion(@PathVariable Long id) {
+        ADMINEvaluacionService.eliminarEvaluacion(id);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 }

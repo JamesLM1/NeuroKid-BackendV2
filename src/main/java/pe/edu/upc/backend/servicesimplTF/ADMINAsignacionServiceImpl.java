@@ -14,6 +14,7 @@ import pe.edu.upc.backend.repositoriesTF.PadreRepository;
 import pe.edu.upc.backend.repositoriesTF.PsicologoRepository;
 import pe.edu.upc.backend.servicesTF.ADMINAsignacionService;
 
+import java.time.LocalDate;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -66,7 +67,7 @@ public class ADMINAsignacionServiceImpl implements ADMINAsignacionService {
         asignacion.setPadre(padre);
         asignacion.setMenor(menor);
         asignacion.setPsicologo(psicologo);
-        asignacion.setFechaAsignacion(new Date());
+        asignacion.setFechaAsignacion(LocalDate.now());
         asignacion.setEstado("Activa"); // Estado inicial
 
         Asignacion nuevaAsignacion = asignacionRepository.save(asignacion);

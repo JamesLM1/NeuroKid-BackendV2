@@ -1,10 +1,11 @@
 package pe.edu.upc.backend.dtosTF;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.Date;
+import java.time.LocalDate;
 
 @Data
 @AllArgsConstructor
@@ -28,10 +29,13 @@ public class PSICOLOGOCitaResponseDTO {
     // Información del Menor
     private Long menorId;
     private String nombreCompletoMenor;
-    private Date fechaNacimientoMenor;
+    
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+    private LocalDate fechaNacimientoMenor;
 
     // Detalles de la Cita
-    private Date fechaHoraCita; // Usamos LocalDateTime para precisión
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+    private LocalDate fechaHoraCita;
     private String motivoCita;
     private String estado; // Pendiente, Confirmada, Rechazada, Cancelada, Finalizada
 

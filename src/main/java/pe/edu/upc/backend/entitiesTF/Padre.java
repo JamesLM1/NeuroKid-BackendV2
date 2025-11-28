@@ -24,10 +24,12 @@ public class Padre{
 
     private String nombre;
     private String apellido;
-    private String dni;
+    private String tipoDocumento;
+    private String dni; // Ahora funciona como numeroDocumento genérico
     private String email;
     private String telefono;
     private String tipoParentesco;
+    private String claveVisible; // Contraseña en texto plano para mostrar al admin
     private Date fechaRegistro;
 
     @ToString.Exclude

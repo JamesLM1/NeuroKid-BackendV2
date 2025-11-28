@@ -10,14 +10,17 @@ import java.time.LocalDate;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class PADREMenorDTO {
-    private Long menorId;
-    private Long padreId; // FK del padre que lo crea
-    private String nombre;
-    private String apellido;
+public class ADMINEvaluacionListDTO {
+    private Long evaluacionId;
     
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
-    private LocalDate fechaNacimiento;
+    private LocalDate fechaEvaluacion;
+    
+    private Integer puntaje;
+    private String comentario;
+    
+    // Nombres completos para la vista de lista
+    private String nombrePsicologo;
+    private String nombrePadre;
 }
 
-//(Para Creación/Respuesta)

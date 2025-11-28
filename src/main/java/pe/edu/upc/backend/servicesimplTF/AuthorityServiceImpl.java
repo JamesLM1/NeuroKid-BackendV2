@@ -6,6 +6,8 @@ import pe.edu.upc.backend.entitiesTF.Authority;
 import pe.edu.upc.backend.repositoriesTF.AuthorityRepository;
 import pe.edu.upc.backend.servicesTF.AuthorityService;
 
+import java.util.List;
+
 @Service
 public class AuthorityServiceImpl implements AuthorityService {
 
@@ -25,5 +27,10 @@ public class AuthorityServiceImpl implements AuthorityService {
     @Override
     public Authority add(Authority authority) {
         return authorityRepository.save(authority);
+    }
+
+    @Override
+    public List<Authority> findAll() {
+        return authorityRepository.findAll();
     }
 }

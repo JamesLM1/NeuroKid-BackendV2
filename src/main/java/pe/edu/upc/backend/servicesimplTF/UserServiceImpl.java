@@ -70,4 +70,9 @@ public class UserServiceImpl implements UserService {
         userDTO.setId(newUser.getId());
         return userDTO;
     }
+
+    @Override
+    public List<User> findAll() {
+        return userRepository.findAll();
+    }
 }

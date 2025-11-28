@@ -22,7 +22,7 @@ public class Asignacion {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long asignacionId;
 
-    private Date fechaAsignacion;
+    private LocalDate fechaAsignacion;
     private String estado;
 
     @ToString.Exclude

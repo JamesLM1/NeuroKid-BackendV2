@@ -8,7 +8,7 @@ import pe.edu.upc.backend.entitiesTF.*;
 import pe.edu.upc.backend.repositoriesTF.CitaRepository;
 import pe.edu.upc.backend.servicesTF.PSICOLOGOCitaPsicologoService;
 
-import java.util.Date;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -65,9 +65,11 @@ public class PSICOLOGOCitaPsicologoServiceImpl implements PSICOLOGOCitaPsicologo
 
     @Override
     public List<PSICOLOGOCitaResponseDTO> obtenerProximasCitas(Long psicologoId) {
-
-        return citaRepository.findByAsignacion_Psicologo_PsicologoIdAndFechaAfter(psicologoId, new Date()).stream()
-                .filter(c -> c.getEstado().equals("Pendiente") || c.getEstado().equals("Confirmada"))
+        // IMPORTANTE: Incluye explícitamente citas con estados: Pendiente, Confirmada, Programada
+        // Las citas PENDIENTES aparecen primero (prioridad) y se incluyen incluso si están en el pasado
+        // (son solicitudes nuevas que requieren atención del psicólogo)
+        LocalDate hoy = LocalDate.now();
+        return citaRepository.findProximasCitasByPsicologo(psicologoId, hoy).stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }

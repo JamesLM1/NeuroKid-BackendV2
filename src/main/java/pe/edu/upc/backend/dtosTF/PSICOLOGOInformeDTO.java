@@ -19,4 +19,7 @@ public class PSICOLOGOInformeDTO {
     private String contenido;
     private Date fechaCreacion;
     private Integer calificacionEficacia; // Puntaje del 1 al 5
+    
+    // Campo enriquecido para mejor visualización
+    private String nombreMenor;
 }

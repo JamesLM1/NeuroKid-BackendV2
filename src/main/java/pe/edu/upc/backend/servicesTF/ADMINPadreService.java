@@ -18,4 +18,7 @@ public interface ADMINPadreService {
 
     // D - Delete
     void eliminarPadre(Long id);
+    
+    // Toggle estado del usuario
+    ADMINPadreDTO toggleEstadoPadre(Long id);
 }
